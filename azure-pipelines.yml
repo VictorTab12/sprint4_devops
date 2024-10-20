@@ -1,206 +1,25 @@
-# Starter pipeline
-- task: PythonScript@0
-  inputs:
-    scriptSource: 'inline'
-    script: |
-      {
-        "nbformat": 4,
-        "nbformat_minor": 0,
-        "metadata": {
-          "colab": {
-            "provenance": []
-          },
-          "kernelspec": {
-            "name": "python3",
-            "display_name": "Python 3"
-          },
-          "language_info": {
-            "name": "python"
-          }
-        },
-        "cells": [
-          {
-            "cell_type": "code",
-            "source": [
-              "!pip install google-search-results\n",
-              "from serpapi import GoogleSearch\n",
-              "def format_price(price_str):\n",
-              "    \"\"\"\n",
-              "    Formata a string de preço, removendo caracteres indesejados\n",
-              "    e convertendo para um valor numérico.\n",
-              "    \"\"\"\n",
-              "    # Remover o \"R$\" e espaços\n",
-              "    clean_price = price_str.replace(\"R$\", \"\").strip()\n",
-              "\n",
-              "    # Remover pontos de milhar e substituir vírgulas decimais por ponto\n",
-              "    clean_price = clean_price.replace(\".\", \"\").replace(\",\", \".\")\n",
-              "\n",
-              "    # Converter para float\n",
-              "    try:\n",
-              "        return float(clean_price)\n",
-              "    except ValueError:\n",
-              "        return None  # Retorna None se não conseguir converter\n",
-              "\n",
-              "def search_products_or_services(query, location, num_results=3, sort_by=\"rating_desc\"):\n",
-              "    \"\"\"\n",
-              "    Realiza uma busca no Google Shopping usando SerpApi, comparando produtos\n",
-              "    ou serviços com base em preço e avaliação.\n",
-              "\n",
-              "    :param query: O termo de busca (ex.: \"laptop\" ou \"reparo de computadores\").\n",
-              "    :param location: A localização da busca (ex.: \"São Paulo, São Paulo, Brazil\").\n",
-              "    :param num_results: Número de resultados a exibir.\n",
-              "    :param sort_by: Critério de ordenação (\"price_asc\", \"price_desc\", \"rating_asc\", \"rating_desc\").\n",
-              "    :return: Relatório detalhado com os melhores resultados.\n",
-              "    \"\"\"\n",
-              "    # Configuração dos parâmetros da pesquisa\n",
-              "    params = {\n",
-              "        \"q\": query,\n",
-              "        \"tbm\": \"shop\",  # Pesquisa no Google Shopping\n",
-              "        \"location\": location,\n",
-              "        \"hl\": \"pt-BR\",\n",
-              "        \"gl\": \"br\",\n",
-              "        \"api_key\": \"1a316514948c0ae8d114b67d500a23bd5282e4564b67ca6c0fa0bd1d1f296e64\"  # Substitua pela sua chave de API SerpApi\n",
-              "    }\n",
-              "\n",
-              "    # Executando a pesquisa\n",
-              "    search = GoogleSearch(params)\n",
-              "    results = search.get_dict()\n",
-              "\n",
-              "    # Extraindo os resultados\n",
-              "    shopping_results = results.get(\"shopping_results\", [])\n",
-              "\n",
-              "    if shopping_results:\n",
-              "        # Filtrando resultados por avaliação e preço\n",
-              "        filtered_results = [\n",
-              "            {\n",
-              "                'title': result['title'],\n",
-              "                'price': format_price(result['price']),\n",
-              "                'rating': float(result.get('rating', '0')),\n",
-              "                'source': result['source'],\n",
-              "                'link': result.get('link', 'N/A'),\n",
-              "                'reviews': result.get('reviews', 'N/A')\n",
-              "            }\n",
-              "            for result in shopping_results\n",
-              "            if 'price' in result and 'rating' in result\n",
-              "        ]\n",
-              "\n",
-              "        # Definindo a ordenação\n",
-              "        if sort_by == \"price_asc\":\n",
-              "            sorted_results = sorted(filtered_results, key=lambda x: x['price'])\n",
-              "        elif sort_by == \"price_desc\":\n",
-              "            sorted_results = sorted(filtered_results, key=lambda x: x['price'], reverse=True)\n",
-              "        elif sort_by == \"rating_asc\":\n",
-              "            sorted_results = sorted(filtered_results, key=lambda x: x['rating'])\n",
-              "        elif sort_by == \"rating_desc\":\n",
-              "            sorted_results = sorted(filtered_results, key=lambda x: x['rating'], reverse=True)\n",
-              "        else:\n",
-              "            sorted_results = filtered_results\n",
-              "\n",
-              "        # Gerando relatório detalhado\n",
-              "        report = f\"Relatório de comparação para: '{query}' em {location}\\n\"\n",
-              "        report += \"=\" * 50 + \"\\n\"\n",
-              "        for i, result in enumerate(sorted_results[:num_results]):\n",
-              "            report += f\"Opção {i + 1}:\\n\"\n",
-              "            report += f\"Produto/Serviço: {result['title']}\\n\"\n",
-              "            report += f\"Preço: R${result['price']:.2f}\\n\"\n",
-              "            report += f\"Avaliação: {result['rating']} estrelas\\n\"\n",
-              "            report += f\"Número de Avaliações: {result['reviews']}\\n\"\n",
-              "            report += f\"Loja/Fornecedor: {result['source']}\\n\"\n",
-              "            report += f\"Link: {result['link']}\\n\"\n",
-              "            report += \"-\" * 50 + \"\\n\"\n",
-              "        return report\n",
-              "    else:\n",
-              "        return \"Nenhum resultado encontrado.\"\n",
-              "\n",
-              "\n",
-              "# Exemplo de uso\n",
-              "location = \"São Paulo, São Paulo, Brazil\"\n",
-              "query = \"ps4\"  # Pode ser alterado para qualquer produto ou serviço\n",
-              "print(search_products_or_services(query, location, sort_by=\"rating_desc\"))"
-            ],
-            "metadata": {
-              "id": "tveu9tO3YTT-",
-              "colab": {
-                "base_uri": "https://localhost:8080/"
-              },
-              "outputId": "fefa00a1-d639-4086-fe93-94e27cfed22c"
-            },
-            "execution_count": null,
-            "outputs": [
-              {
-                "output_type": "stream",
-                "name": "stdout",
-                "text": [
-                  "Collecting google-search-results\n",
-                  "  Downloading google_search_results-2.4.2.tar.gz (18 kB)\n",
-                  "  Preparing metadata (setup.py) ... \u001b[?25l\u001b[?25hdone\n",
-                  "Requirement already satisfied: requests in /usr/local/lib/python3.10/dist-packages (from google-search-results) (2.32.3)\n",
-                  "Requirement already satisfied: charset-normalizer<4,>=2 in /usr/local/lib/python3.10/dist-packages (from requests->google-search-results) (3.3.2)\n",
-                  "Requirement already satisfied: idna<4,>=2.5 in /usr/local/lib/python3.10/dist-packages (from requests->google-search-results) (3.8)\n",
-                  "Requirement already satisfied: urllib3<3,>=1.21.1 in /usr/local/lib/python3.10/dist-packages (from requests->google-search-results) (2.0.7)\n",
-                  "Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.10/dist-packages (from requests->google-search-results) (2024.8.30)\n",
-                  "Building wheels for collected packages: google-search-results\n",
-                  "  Building wheel for google-search-results (setup.py) ... \u001b[?25l\u001b[?25hdone\n",
-                  "  Created wheel for google-search-results: filename=google_search_results-2.4.2-py3-none-any.whl size=32010 sha256=eb6f113acf9c1aa724f2882ba96a842ab60184ff62b92257b90da311bd265e25\n",
-                  "  Stored in directory: /root/.cache/pip/wheels/d3/b2/c3/03302d12bb44a2cdff3c9371f31b72c0c4e84b8d2285eeac53\n",
-                  "Successfully built google-search-results\n",
-                  "Installing collected packages: google-search-results\n",
-                  "Successfully installed google-search-results-2.4.2\n",
-                  "Relatório de comparação para: 'ps4' em São Paulo, São Paulo, Brazil\n",
-                  "==================================================\n",
-                  "Opção 1:\n",
-                  "Produto/Serviço: Console Playstation 4 Slim 1TB - Sony\n",
-                  "Preço: R$2171.00\n",
-                  "Avaliação: 4.7 estrelas\n",
-                  "Número de Avaliações: 49323\n",
-                  "Loja/Fornecedor: Mercado Livre\n",
-                  "Link: https://www.mercadolivre.com.br/console-playstation-4-slim-1tb-standard-sony-cor-preto/p/MLB28082635?matt_tool=18956390&utm_source=google_shopping&utm_medium=organic&item_id=MLB4742261804&from=gshop\n",
-                  "--------------------------------------------------\n",
-                  "Opção 2:\n",
-                  "Produto/Serviço: PS4 Slim 1TB, Usado, 1 Controle, Sem Jogo\n",
-                  "Preço: R$1549.90\n",
-                  "Avaliação: 4.7 estrelas\n",
-                  "Número de Avaliações: 49323\n",
-                  "Loja/Fornecedor: Nova Era Games\n",
-                  "Link: https://www.lojanovaera.com/ps4-slim-1tb-1-controle-sem-jogo-2024-01-06-13-15-26?utm_source=Site&utm_medium=GoogleMerchant&utm_campaign=GoogleMerchant&srsltid=AfmBOoqvAqCOFXmg-ZolVZkhJ0tHtFZ2dxgZExVuO-oPq1RRoKzsUjJ1tyc\n",
-                  "--------------------------------------------------\n",
-                  "Opção 3:\n",
-                  "Produto/Serviço: Playstation 4 PS4 Slim 500 GB\n",
-                  "Preço: R$2374.05\n",
-                  "Avaliação: 4.7 estrelas\n",
-                  "Número de Avaliações: 34499\n",
-                  "Loja/Fornecedor: KaBuM!\n",
-                  "Link: https://www.kabum.com.br/produto/376298/console-sony-playstation-4-standard-500gb-preto?srsltid=AfmBOooc0_XEd2xQMguuCMQnNLvzksDO2VhSD8h9Vku7yFOTqaI3Ps2H81A\n",
-                  "--------------------------------------------------\n",
-                  "\n"
-                ]
-              }
-            ]
-          },
-          {
-            "cell_type": "markdown",
-            "source": [],
-            "metadata": {
-              "id": "3vxjvnS4SUIJ"
-            }
-          }
-        ]
-      }
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
 trigger:
-- main
+  branches:
+    include:
+      - main  # Substitua pelo branch correto
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: 'ubuntu-latest'
 
 steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.x'
+    addToPath: true
 
 - script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+    python -m pip install --upgrade pip
+    pip install -r requirements.txt
+    python -m unittest discover  # ou outra ferramenta de teste
+  displayName: 'Instalar dependências e rodar testes'
+
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: '$(Build.ArtifactStagingDirectory)'
+    artifactName: 'drop'
+    publishLocation: 'pipeline'
