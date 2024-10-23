@@ -14,5 +14,5 @@ steps:
 
   - script: |
       python -m pip install -r requirements.txt  # Instala dependências
-      python seu_script.py  # Executa o script Python
+      python sprint4.py  # Executa o script Python
     displayName: 'Run Python script'
