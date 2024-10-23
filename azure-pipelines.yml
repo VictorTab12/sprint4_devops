@@ -1,4 +1,5 @@
 trigger:
+
   - main  # ou a branch que você quer monitorar
 
 pool:
